@@ -48,6 +48,7 @@ class ScoreService {
             val date = convertUnixToLocalDateTime(message.timeStamp)
             val weekOfYear = getWeek(date)
             val dayOfWeek = date.dayOfWeek
+            val currentYear = date.year
 
             val userName = fetchName(message.id)
 
@@ -56,7 +57,8 @@ class ScoreService {
                     Score.select {
                         (Score.name eq userName) and
                                 (Score.week eq weekOfYear) and
-                                (Score.day eq dayOfWeek.name)
+                                (Score.day eq dayOfWeek.name) and
+                                (Score.year eq currentYear)
                     }.count() > 0
                 if (!exists && isWeekDay(dayOfWeek.name)) {
                     logger.info("Inserting Score data for user {}", userName)
@@ -65,6 +67,7 @@ class ScoreService {
                         it[week] = weekOfYear
                         it[score] = message.score
                         it[day] = dayOfWeek.name
+                        it[year] = currentYear
                     }
                 } else {
                     logger.info("No data inserted for user {} for day {}", userName, dayOfWeek.name)
@@ -83,11 +86,12 @@ class ScoreService {
 
     fun calculateWeeklyReport(): String {
         val currentWeek = getWeek(LocalDateTime.now())
+        val currentYear = LocalDateTime.now().year
 
         var allScoresForCurrentWeek = emptyList<ResultRow>()
 
         transaction {
-            allScoresForCurrentWeek = Score.select { Score.week eq currentWeek }.toList()
+            allScoresForCurrentWeek = Score.select { (Score.week eq currentWeek) and (Score.year eq currentYear) }.toList()
         }
 
         val aggregatedMap = allScoresForCurrentWeek.groupBy { it[Score.name] }

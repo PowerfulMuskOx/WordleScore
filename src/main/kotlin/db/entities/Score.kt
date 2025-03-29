@@ -7,5 +7,6 @@ object Score : Table() {
     val week = integer("week_of_year")
     val day = varchar("day_of_week", 10)
     val score = integer("score")
-    override val primaryKey = PrimaryKey(name, week, day)
+    val year = integer("year")
+    override val primaryKey = PrimaryKey(name, week, day, year)
 }
