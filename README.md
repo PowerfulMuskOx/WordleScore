@@ -19,7 +19,7 @@ This token can be found where you created your Slack App.
 Before you can run the application you will need to specify a list of users in a file called *users.json* (See example_users.json for an example)\
 You also need to specify some properties in a file called *config.properties* (See example.config.properties for an example)
 
-To run the application use
+To run the application use:
 ```bash
 ./gradlew run
 ```
