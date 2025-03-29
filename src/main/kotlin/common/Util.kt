@@ -39,45 +39,41 @@ class Util {
     }
 
     private fun createUsers() {
-        val userFile = readFile("users.json")
-        if (userFile != null) {
-            val json = userFile.readText()
-
-            val gson = Gson()
-            val listType = object : TypeToken<List<UserDomain>>() {}.type
-            val users: List<UserDomain> = gson.fromJson(json, listType)
-            users.forEach { user ->
-                val alreadyExists = Users.select { Users.slackId eq user.slackId }.count() > 0
-                if (!alreadyExists) {
-                    Users.insert {
-                        it[name] = user.name
-                        it[slackId] = user.slackId
-                    }
+        val json = readFile("users.json")
+        val gson = Gson()
+        val listType = object : TypeToken<List<UserDomain>>() {}.type
+        val users: List<UserDomain> = gson.fromJson(json, listType)
+        users.forEach { user ->
+            val alreadyExists = Users.select { Users.slackId eq user.slackId }.count() > 0
+            if (!alreadyExists) {
+                Users.insert {
+                    it[name] = user.name
+                    it[slackId] = user.slackId
                 }
             }
         }
     }
 
     fun loadProperties(): Map<String, String>? {
-        val file = readFile("config.properties")
-        if (file != null) {
-
-            // Read and parse properties into a map
-            return file.readLines()
+        val content = readFile("config.properties")
+        if (content != null) {
+            return content.lines() // Split the string into lines
                 .filter { it.isNotBlank() && !it.startsWith("#") } // Ignore blank lines and comments
                 .associate {
-                    val (key, value) = it.split("=")
+                    val (key, value) = it.split("=") // Split each line into key-value pairs
                     key.trim() to value.trim()
                 }
         }
         return null
     }
 
-    private fun readFile(filePath: String): File? {
+    private fun readFile(filePath: String): String? {
         val classLoader = Thread.currentThread().contextClassLoader
-        val resource = classLoader.getResource(filePath)
-        if (resource != null) {
-            return File(resource.toURI())
+        val resource = classLoader.getResourceAsStream(filePath)
+            if (resource != null) {
+                resource.use { inputStream ->
+                        return inputStream.bufferedReader().use { it.readText() }
+                    }
         } else {
             logger.info("File: {} not found", filePath)
         }
