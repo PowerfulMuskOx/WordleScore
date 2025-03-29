@@ -8,11 +8,12 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("WordleScore")
+private val util = Util()
+private val slackService = SlackService()
+private val scoreService = ScoreService()
 
 fun main() {
-    val util = Util()
-    val slackService = SlackService()
-    val scoreService = ScoreService()
+
     val properties = util.loadProperties()
     val slackChannel = properties!!["slack_channel"].orEmpty()
     val hourDailyFetch = properties["hour_daily_fetch"]!!.toInt()

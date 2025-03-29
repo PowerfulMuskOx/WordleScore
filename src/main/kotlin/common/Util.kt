@@ -2,7 +2,6 @@ package org.example.common
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.sun.org.apache.xalan.internal.lib.ExsltDatetime.time
 import org.example.db.entities.Score
 import org.example.db.entities.Users
 import org.example.domain.UserDomain
@@ -10,11 +9,9 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.util.*
