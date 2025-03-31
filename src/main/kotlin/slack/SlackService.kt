@@ -24,8 +24,8 @@ class SlackService {
 
     fun fetchHistory(id: String): List<Message> {
         var messageList = emptyList<Message>()
-        val startOfDayYesterday = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
-        val endOfDayYesterday = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).atZone(ZoneId.systemDefault())
+        val startOfDayYesterday = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault())
+        val endOfDayYesterday = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.MAX).atZone(ZoneId.systemDefault())
         try {
             // Call the conversations.history method using the built-in WebClient
             val result = client.conversationsHistory { r: ConversationsHistoryRequestBuilder ->
