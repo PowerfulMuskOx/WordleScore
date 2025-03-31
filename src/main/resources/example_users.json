@@ -1,7 +1,0 @@
-//Should contain a list of names of users and their connecting slack id
-[
-  {
-  "name": "ExampleName",
-  "slackId": "U01ABC02DEF"
-  }
-]

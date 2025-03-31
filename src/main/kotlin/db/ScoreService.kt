@@ -2,9 +2,9 @@ package org.example.db
 
 import com.slack.api.model.Message
 import org.example.db.entities.Score
-import org.example.db.entities.Users
 import org.example.domain.ModelDomain
 import org.example.domain.Weekdays
+import org.example.slack.SlackService
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
@@ -20,6 +20,7 @@ import java.util.*
 
 class ScoreService {
     private val logger: Logger = LoggerFactory.getLogger("WordleScore")
+    private val slackService = SlackService()
 
     fun filterWordleResults(messageList: List<Message>): MutableList<ModelDomain> {
         val filteredMessageList: MutableList<ModelDomain> = mutableListOf()
@@ -50,7 +51,7 @@ class ScoreService {
             val dayOfWeek = date.dayOfWeek
             val currentYear = date.year
 
-            val userName = fetchName(message.id)
+            val userName = slackService.fetchUsername(message.id)
 
             transaction {
                 val exists =
@@ -74,14 +75,6 @@ class ScoreService {
                 }
             }
         }
-    }
-
-    private fun fetchName(slackId: String): String {
-        var userName = ""
-        transaction {
-            userName = Users.select { Users.slackId eq slackId }.single()[Users.name]
-        }
-        return userName
     }
 
     fun calculateWeeklyReport(): String {

@@ -3,7 +3,6 @@ package org.example.common
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.example.db.entities.Score
-import org.example.db.entities.Users
 import org.example.domain.UserDomain
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
@@ -28,26 +27,7 @@ class Util {
 
         transaction {
             // Create tables
-            create(Users, Score)
-
-            // Create users
-            createUsers()
-        }
-    }
-
-    private fun createUsers() {
-        val json = readFile("users.json")
-        val gson = Gson()
-        val listType = object : TypeToken<List<UserDomain>>() {}.type
-        val users: List<UserDomain> = gson.fromJson(json, listType)
-        users.forEach { user ->
-            val alreadyExists = Users.select { Users.slackId eq user.slackId }.count() > 0
-            if (!alreadyExists) {
-                Users.insert {
-                    it[name] = user.name
-                    it[slackId] = user.slackId
-                }
-            }
+            create(Score)
         }
     }
 

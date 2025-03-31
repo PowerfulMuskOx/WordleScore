@@ -4,6 +4,7 @@ import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.methods.request.chat.ChatPostMessageRequest.ChatPostMessageRequestBuilder
 import com.slack.api.methods.request.conversations.ConversationsHistoryRequest.ConversationsHistoryRequestBuilder
+import com.slack.api.methods.request.users.UsersInfoRequest.UsersInfoRequestBuilder
 import com.slack.api.model.Message
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,8 +24,8 @@ class SlackService {
 
     fun fetchHistory(id: String): List<Message> {
         var messageList = emptyList<Message>()
-        val startOfDayYesterday = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault())
-        val endOfDayYesterday = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.MAX).atZone(ZoneId.systemDefault())
+        val startOfDayYesterday = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+        val endOfDayYesterday = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).atZone(ZoneId.systemDefault())
         try {
             // Call the conversations.history method using the built-in WebClient
             val result = client.conversationsHistory { r: ConversationsHistoryRequestBuilder ->
@@ -65,5 +66,22 @@ class SlackService {
         } catch (e: SlackApiException) {
             logger.error("error: {}", e.message, e)
         }
+    }
+
+    fun fetchUsername(slackId: String): String {
+        logger.info("Fetching name for slackId: {}", slackId)
+        var name = ""
+        try {
+            val result = client.usersInfo { r: UsersInfoRequestBuilder ->
+                r.token(System.getenv("SLACK_BOT_TOKEN"))
+                    .user(slackId)
+            }
+            name = result.user.realName
+        } catch (e: IOException) {
+            logger.error("error: {}", e.message, e)
+        } catch (e: SlackApiException) {
+            logger.error("error: {}", e.message, e)
+        }
+        return name
     }
 }
