@@ -94,8 +94,8 @@ class ScoreService {
         val aggregatedMap = allScoresForCurrentWeek.groupBy { slackService.fetchUsername(it[Score.name]) }
             .mapValues { (_, values) ->
                 val totalScore = values.sumOf { it[Score.score] }
-                val adjustment = (5 - values.size) * 7
-                totalScore + adjustment
+                val calculateMissingDays = (5 - values.size) * 7
+                totalScore + calculateMissingDays
             }.toList().sortedBy { (_, score) -> score }.toMap()
 
         return createSlackNumberedList(currentWeek.toString(), aggregatedMap)
