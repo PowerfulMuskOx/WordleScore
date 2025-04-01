@@ -35,6 +35,8 @@ fun main() {
                 if (messageList.isNotEmpty()) {
                     val userMessageMap = scoreService.filterWordleResults(messageList)
                     scoreService.insertScoreData(userMessageMap)
+                    val message = "Daily Wordle results collected!"
+                    slackService.postMessage(slackChannel, message)
                 }
             }
         }, dailyCalendar.time, 24 * 60 * 60 * 1000)
@@ -50,7 +52,7 @@ fun main() {
         weeklyTimer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 val weeklyReport = scoreService.calculateWeeklyReport()
-                slackService.postWeeklyReport(slackChannel, weeklyReport)
+                slackService.postMessage(slackChannel, weeklyReport)
             }
         }, weeklyCalendar.time, 7 * 24 * 60 * 60 * 1000)
     }

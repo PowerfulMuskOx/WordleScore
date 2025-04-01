@@ -54,7 +54,7 @@ class SlackService {
         return messageList
     }
 
-    fun postWeeklyReport(id: String, text: String) {
+    fun postMessage(id: String, text: String) {
         try {
             client.chatPostMessage { r: ChatPostMessageRequestBuilder ->
                 r.token(System.getenv("SLACK_BOT_TOKEN"))
