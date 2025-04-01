@@ -3,7 +3,6 @@ package org.example.common
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.example.db.entities.Score
-import org.example.domain.UserDomain
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
@@ -17,7 +16,7 @@ import java.util.*
 
 class Util {
 
-    private val logger: Logger = LoggerFactory.getLogger("WordleScore")
+    private val logger: Logger = LoggerFactory.getLogger("Util")
 
     fun setupDb() {
         val properties = loadProperties()

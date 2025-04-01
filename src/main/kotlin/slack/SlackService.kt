@@ -1,6 +1,5 @@
 package org.example.slack
 
-import com.google.gson.JsonObject
 import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.methods.request.chat.ChatPostMessageRequest.ChatPostMessageRequestBuilder
@@ -21,7 +20,7 @@ class SlackService {
 
     val client = Slack.getInstance().methods()
     private var conversationHistory: Optional<List<Message>> = Optional.empty()
-    private val logger: Logger = LoggerFactory.getLogger("WordleScore")
+    private val logger: Logger = LoggerFactory.getLogger("SlackService")
 
     fun fetchHistory(id: String): List<Message> {
         var messageList = emptyList<Message>()

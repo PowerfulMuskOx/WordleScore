@@ -21,7 +21,7 @@ import java.time.temporal.WeekFields
 import java.util.*
 
 class ScoreService {
-    private val logger: Logger = LoggerFactory.getLogger("WordleScore")
+    private val logger: Logger = LoggerFactory.getLogger("ScoreService")
     private val slackService = SlackService()
 
     fun filterWordleResults(messageList: List<Message>): MutableList<ModelDomain> {
