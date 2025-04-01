@@ -1,5 +1,6 @@
 package org.example.slack
 
+import com.google.gson.JsonObject
 import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.methods.request.chat.ChatPostMessageRequest.ChatPostMessageRequestBuilder

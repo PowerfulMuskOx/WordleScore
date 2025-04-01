@@ -12,6 +12,8 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -28,18 +30,22 @@ class ScoreService {
             val messageText = message.text
 
             //Filter messages that contains Wordle score
-            val regex = """Wordle \d+ \d+ \d+/\d+(?=\*| |:|\n|$)""".toRegex()
-            val regexMobile = """Wordle \d+(?:,\d{3})* \d+/\d+(?=\*| |:|\n|$)""".toRegex()
-            var wordleString = regex.find(messageText)?.value
-            if (wordleString == null) {
-                wordleString = regexMobile.find(messageText)?.value
-            }
+            val regex = """Wordle \d+(?:\s|,|´┐¢)\d+ (?:\d+|X)/\d+(?=\*| |:|\n|$)""".toRegex()
+            val wordleString = regex.find(messageText)?.value
+
+            logger.info("Filtered out: {}", wordleString)
+
             if (wordleString != null) {
-                val score = wordleString.substringBefore("/").last()
+                var score = wordleString.substringBefore("/").last()
+                if(score == 'X') {
+                    score = '7'
+                }
                 val modelDomain = ModelDomain(id = message.user, score = score.digitToInt(), timeStamp = message.ts)
                 filteredMessageList.add(modelDomain)
             }
         }
+
+        logger.info("Number of Wordle messages: {}", filteredMessageList.size)
 
         return filteredMessageList
     }
@@ -51,7 +57,7 @@ class ScoreService {
             val dayOfWeek = date.dayOfWeek
             val currentYear = date.year
 
-            val userName = slackService.fetchUsername(message.id)
+            val userName = message.id
 
             transaction {
                 val exists =
@@ -87,22 +93,25 @@ class ScoreService {
             allScoresForCurrentWeek = Score.select { (Score.week eq currentWeek) and (Score.year eq currentYear) }.toList()
         }
 
-        val aggregatedMap = allScoresForCurrentWeek.groupBy { it[Score.name] }
-            .mapValues { (_, values) -> values.sumOf { it[Score.score] } }.entries.sortedBy { it.value }
-            .associate { it.key to it.value }
+        val aggregatedMap = allScoresForCurrentWeek.groupBy { slackService.fetchUsername(it[Score.name]) }
+            .mapValues { (_, values) ->
+                val totalScore = values.sumOf { it[Score.score] }
+                val adjustment = (5 - values.size) * 7
+                totalScore + adjustment
+            }.toList().sortedBy { (_, score) -> score }.toMap()
 
-        return createSlackBulletedList(currentWeek.toString(), aggregatedMap)
+        return createSlackNumberedList(currentWeek.toString(), aggregatedMap)
     }
 
-    private fun createSlackBulletedList(week: String, data: Map<String, Int>): String {
+    private fun createSlackNumberedList(week: String, data: Map<String, Int>): String {
         val title = "Wordle Result Week $week"
-        val bullets = data.entries.joinToString("\n") { (key, value) ->
-            "- *$key*: $value"
+        val numbers = data.entries.withIndex().joinToString("\n") { (index, entry) ->
+            "${index + 1}. *${entry.key}*: ${entry.value}"
         }
 
         return """
 *$title*
-$bullets
+$numbers
     """.trimIndent()
     }
 

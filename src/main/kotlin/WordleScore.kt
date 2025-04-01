@@ -55,4 +55,14 @@ fun main() {
         }, weeklyCalendar.time, 7 * 24 * 60 * 60 * 1000)
 
     }
+
+    val messageList = slackService.fetchHistory(slackChannel)
+
+    if (messageList.isNotEmpty()) {
+        val userMessageMap = scoreService.filterWordleResults(messageList)
+        scoreService.insertScoreData(userMessageMap)
+    }
+
+    val weeklyReport = scoreService.calculateWeeklyReport()
+    slackService.postWeeklyReport(slackChannel, weeklyReport)
 }
