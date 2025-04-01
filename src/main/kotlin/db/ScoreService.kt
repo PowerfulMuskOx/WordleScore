@@ -30,10 +30,8 @@ class ScoreService {
             val messageText = message.text
 
             //Filter messages that contains Wordle score
-            val regex = """Wordle \d+(?:\s|,|´┐¢)\d+ (?:\d+|X)/\d+(?=\*| |:|\n|$)""".toRegex()
+            val regex = """Wordle \d+(\D+)\d+ (?:\d+|X)/\d+(?=\*| |:|\n|$)""".toRegex()
             val wordleString = regex.find(messageText)?.value
-
-            logger.info("Filtered out: {}", wordleString)
 
             if (wordleString != null) {
                 var score = wordleString.substringBefore("/").last()

@@ -53,6 +53,5 @@ fun main() {
                 slackService.postWeeklyReport(slackChannel, weeklyReport)
             }
         }, weeklyCalendar.time, 7 * 24 * 60 * 60 * 1000)
-
     }
 }
