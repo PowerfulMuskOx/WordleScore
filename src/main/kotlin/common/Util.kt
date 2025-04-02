@@ -46,10 +46,10 @@ class Util {
     private fun readFile(filePath: String): String? {
         val classLoader = Thread.currentThread().contextClassLoader
         val resource = classLoader.getResourceAsStream(filePath)
-            if (resource != null) {
-                resource.use { inputStream ->
-                        return inputStream.bufferedReader().use { it.readText() }
-                    }
+        if (resource != null) {
+            resource.use { inputStream ->
+                return inputStream.bufferedReader().use { it.readText() }
+            }
         } else {
             logger.info("File: {} not found", filePath)
         }

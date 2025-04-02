@@ -35,7 +35,7 @@ class ScoreService {
 
             if (wordleString != null) {
                 var score = wordleString.substringBefore("/").last()
-                if(score == 'X') {
+                if (score == 'X') {
                     score = '7'
                 }
                 val modelDomain = ModelDomain(id = message.user, score = score.digitToInt(), timeStamp = message.ts)
@@ -88,7 +88,8 @@ class ScoreService {
         var allScoresForCurrentWeek = emptyList<ResultRow>()
 
         transaction {
-            allScoresForCurrentWeek = Score.select { (Score.week eq currentWeek) and (Score.year eq currentYear) }.toList()
+            allScoresForCurrentWeek =
+                Score.select { (Score.week eq currentWeek) and (Score.year eq currentYear) }.toList()
         }
 
         val aggregatedMap = allScoresForCurrentWeek.groupBy { slackService.fetchUsername(it[Score.name]) }

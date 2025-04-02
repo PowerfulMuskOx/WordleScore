@@ -4,6 +4,7 @@ import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.methods.request.chat.ChatPostMessageRequest.ChatPostMessageRequestBuilder
 import com.slack.api.methods.request.conversations.ConversationsHistoryRequest.ConversationsHistoryRequestBuilder
+import com.slack.api.methods.request.conversations.ConversationsOpenRequest.ConversationsOpenRequestBuilder
 import com.slack.api.methods.request.users.UsersInfoRequest.UsersInfoRequestBuilder
 import com.slack.api.model.Message
 import org.slf4j.Logger
@@ -13,6 +14,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -22,18 +24,17 @@ class SlackService {
     private var conversationHistory: Optional<List<Message>> = Optional.empty()
     private val logger: Logger = LoggerFactory.getLogger("SlackService")
 
-    fun fetchHistory(id: String): List<Message> {
+    fun fetchHistory(id: String, latest: ZonedDateTime, oldest: ZonedDateTime): List<Message> {
         var messageList = emptyList<Message>()
-        val startOfDayYesterday = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault())
-        val endOfDayYesterday = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.MAX).atZone(ZoneId.systemDefault())
+
         try {
             // Call the conversations.history method using the built-in WebClient
             val result = client.conversationsHistory { r: ConversationsHistoryRequestBuilder ->
                 r // The token you used to initialize your app
                     .token(System.getenv("SLACK_BOT_TOKEN"))
                     .channel(id)
-                    .latest(endOfDayYesterday.toEpochSecond().toString())
-                    .oldest(startOfDayYesterday.toEpochSecond().toString())
+                    .latest(latest.toEpochSecond().toString())
+                    .oldest(oldest.toEpochSecond().toString())
             }
             conversationHistory = Optional.ofNullable(result.messages)
             messageList = conversationHistory.orElse(emptyList())
@@ -83,5 +84,22 @@ class SlackService {
             logger.error("error: {}", e.message, e)
         }
         return name
+    }
+
+    fun openConversation(slackId: String): String {
+        var channel = ""
+        try {
+            val result = client.conversationsOpen { r: ConversationsOpenRequestBuilder ->
+                r.token(System.getenv("SLACK_BOT_TOKEN"))
+                    .users(mutableListOf(slackId))
+            }
+            channel = result.channel.id
+        } catch (e: IOException) {
+            logger.error("error: {}", e.message, e)
+        } catch (e: SlackApiException) {
+            logger.error("error: {}", e.message, e)
+        }
+        return channel
+
     }
 }
