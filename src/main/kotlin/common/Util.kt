@@ -1,12 +1,8 @@
 package org.example.common
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.example.db.entities.Score
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -56,34 +52,32 @@ class Util {
         return null
     }
 
-    fun getCalendarInstance(hourOfDay: Int, dayOfWeek: String?): Calendar? {
-        val weeklyCalendar = dayOfWeek != null
+    fun getCalendarInstance(hourOfDay: Int): Calendar? {
         val calendar = Calendar.getInstance()
-        if (weeklyCalendar) {
-            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.DAY_OF_WEEK, DayOfWeek.valueOf(dayOfWeek!!).value)
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
 
-            if (calendar.time.before(Calendar.getInstance().time)) {
-                calendar.add(Calendar.DATE, 7)
-            }
-
-        } else {
-            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-
-            if (calendar.time.before(Calendar.getInstance().time)) {
-                calendar.add(Calendar.DATE, 1)
-            }
+        if (calendar.time.before(Calendar.getInstance().time)) {
+            calendar.add(Calendar.DATE, 1)
         }
 
         return calendar
     }
 
-    fun getReadableDateFromCalendar(calendar: Calendar): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        return dateFormat.format(calendar.time)
+    fun getInitialDelayInSeconds(): Long {
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY)
+            set(Calendar.HOUR_OF_DAY, 16)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+
+        if (now.after(target)) {
+            target.add(Calendar.WEEK_OF_YEAR, 1) // Move to next week
+        }
+
+        return (target.timeInMillis - now.timeInMillis) / 1000
     }
 }

@@ -7,6 +7,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.*
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 private val logger: Logger = LoggerFactory.getLogger("WordleScore")
 private val util = Util()
@@ -25,10 +27,10 @@ fun main() {
     util.setupDb()
 
     //Schedule daily read of Slack data
-    val dailyCalendar = util.getCalendarInstance(hourDailyFetch, null)
+    val dailyCalendar = util.getCalendarInstance(hourDailyFetch)
     val dailyTimer = Timer()
     if (dailyCalendar != null) {
-        logger.info("Daily Schedule set to: {}", util.getReadableDateFromCalendar(dailyCalendar))
+        logger.info("Daily read of slack data occurs at {}", hourDailyFetch)
 
         dailyTimer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
@@ -50,25 +52,25 @@ fun main() {
 
 
     //Schedule weekly score aggregation and posting
-    val weeklyCalendar = util.getCalendarInstance(hourWeeklyReport, dayWeeklyReport)
-    val weeklyTimer = Timer()
-    if (weeklyCalendar != null) {
-        logger.info("Weekly Schedule set to: {}", util.getReadableDateFromCalendar(weeklyCalendar))
+    val scheduler = Executors.newScheduledThreadPool(1)
 
-        weeklyTimer.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                //Fetch the last days messages and handle
-                val oldest = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
-                val latest = ZonedDateTime.now(ZoneId.systemDefault())
-                val messageList = slackService.fetchHistory(slackChannel, latest, oldest)
+    val initialDelay = util.getInitialDelayInSeconds()
+    val period = TimeUnit.DAYS.toSeconds(7) // Run every week
+    logger.info("Weekly Schedule set to: {} at {}", dayWeeklyReport, hourWeeklyReport)
 
-                if (messageList.isNotEmpty()) {
-                    val userMessageMap = scoreService.filterWordleResults(messageList)
-                    scoreService.insertScoreData(userMessageMap)
-                }
-                val weeklyReport = scoreService.calculateWeeklyReport()
-                slackService.postMessage(slackChannel, weeklyReport)
-            }
-        }, weeklyCalendar.time, 7 * 24 * 60 * 60 * 1000)
-    }
+    scheduler.scheduleAtFixedRate( {
+        //Fetch the last days messages and handle
+        val oldest = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+        val latest = ZonedDateTime.now(ZoneId.systemDefault())
+        val messageList = slackService.fetchHistory(slackChannel, latest, oldest)
+
+        if (messageList.isNotEmpty()) {
+            val userMessageMap = scoreService.filterWordleResults(messageList)
+            scoreService.insertScoreData(userMessageMap)
+        }
+        val weeklyReport = scoreService.calculateWeeklyReport()
+        slackService.postMessage(slackChannel, weeklyReport) },
+        initialDelay,
+        period,
+        TimeUnit.SECONDS)
 }
