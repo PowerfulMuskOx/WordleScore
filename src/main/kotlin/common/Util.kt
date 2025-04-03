@@ -65,11 +65,11 @@ class Util {
         return calendar
     }
 
-    fun getInitialDelayInSeconds(): Long {
+    fun getInitialDelayInSeconds(hourOfDay: Int, dayOfWeek: String): Long {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY)
-            set(Calendar.HOUR_OF_DAY, 16)
+            set(Calendar.DAY_OF_WEEK, getCalendarDayFromString(dayOfWeek))
+            set(Calendar.HOUR_OF_DAY, hourOfDay)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
         }
@@ -79,5 +79,19 @@ class Util {
         }
 
         return (target.timeInMillis - now.timeInMillis) / 1000
+    }
+
+    companion object {
+        private fun getCalendarDayFromString(dayOfWeek: String) =
+            when (dayOfWeek) {
+                "SUNDAY" -> 1
+                "MONDAY" -> 2
+                "TUESDAY" -> 3
+                "WEDNESDAY" -> 4
+                "THURSDAY" -> 5
+                "FRIDAY" -> 6
+                "SATURDAY" -> 7
+                else -> throw IllegalArgumentException("Invalid day of week: $dayOfWeek")
+            }
     }
 }

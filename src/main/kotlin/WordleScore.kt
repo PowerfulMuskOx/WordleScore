@@ -22,7 +22,7 @@ fun main() {
     val personalSlackId = properties["personal_slack_id"].orEmpty()
     val hourDailyFetch = properties["hour_daily_fetch"]!!.toInt()
     val hourWeeklyReport = properties["hour_weekly_report"]!!.toInt()
-    val dayWeeklyReport = properties["day_weekly_report"]
+    val dayWeeklyReport = properties["day_weekly_report"]!!
 
     util.setupDb()
 
@@ -54,23 +54,26 @@ fun main() {
     //Schedule weekly score aggregation and posting
     val scheduler = Executors.newScheduledThreadPool(1)
 
-    val initialDelay = util.getInitialDelayInSeconds()
+    val initialDelay = util.getInitialDelayInSeconds(hourWeeklyReport, dayWeeklyReport)
     val period = TimeUnit.DAYS.toSeconds(7) // Run every week
     logger.info("Weekly Schedule set to: {} at {}", dayWeeklyReport, hourWeeklyReport)
 
-    scheduler.scheduleAtFixedRate( {
-        //Fetch the last days messages and handle
-        val oldest = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
-        val latest = ZonedDateTime.now(ZoneId.systemDefault())
-        val messageList = slackService.fetchHistory(slackChannel, latest, oldest)
+    scheduler.scheduleAtFixedRate(
+        {
+            //Fetch the last days messages and handle
+            val oldest = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val latest = ZonedDateTime.now(ZoneId.systemDefault())
+            val messageList = slackService.fetchHistory(slackChannel, latest, oldest)
 
-        if (messageList.isNotEmpty()) {
-            val userMessageMap = scoreService.filterWordleResults(messageList)
-            scoreService.insertScoreData(userMessageMap)
-        }
-        val weeklyReport = scoreService.calculateWeeklyReport()
-        slackService.postMessage(slackChannel, weeklyReport) },
+            if (messageList.isNotEmpty()) {
+                val userMessageMap = scoreService.filterWordleResults(messageList)
+                scoreService.insertScoreData(userMessageMap)
+            }
+            val weeklyReport = scoreService.calculateWeeklyReport()
+            slackService.postMessage(slackChannel, weeklyReport)
+        },
         initialDelay,
         period,
-        TimeUnit.SECONDS)
+        TimeUnit.SECONDS
+    )
 }
